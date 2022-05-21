@@ -1,12 +1,20 @@
 import express, { Request, Response } from "express";
 import { ObjectId } from "mongodb";
 import { collections } from "../services/database.service";
+import validator from '../utilities/validator'
+import { decodeToken } from '../firebase/manage.token'
+//Schema Joi
+import gameSchema from "../schemas-joi/game.schemajoi";
+
 
 export const gamesRouter = express.Router();
 
+
+//Middlewares
 gamesRouter.use(express.json());
 
-gamesRouter.get("/", async (_req: Request, res: Response) => {
+
+gamesRouter.get("/", decodeToken, async (_req: Request, res: Response) => {
     try {
         // Call find with an empty filter object, meaning it returns all documents in the collection. Saves as Game array to take advantage of types
         const games = await collections.games.find({}).toArray();
@@ -34,8 +42,9 @@ gamesRouter.get("/:id", async (req: Request, res: Response) => {
     }
 });
 
-gamesRouter.post("/", async (req: Request, res: Response) => {
+gamesRouter.post("/", validator.body(gameSchema), async (req: Request, res: Response) => {
     try {
+
         const newGame = req.body;
         const result = await collections.games.insertOne(newGame);
 
